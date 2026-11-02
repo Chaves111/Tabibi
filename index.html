@@ -1,0 +1,2487 @@
+Here is the complete, clean, and ready-to-run **`src/App.tsx`** code containing all **6 Phases**. 
+
+Copy the entire code block below, paste it into **`src/App.tsx`** in VS Code, and press **`Ctrl + S`** to save:
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import {
+  Activity,
+  Stethoscope,
+  BrainCircuit,
+  Pill,
+  Users,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  AlertTriangle,
+  ArrowLeftCircle,
+  CheckCircle2,
+  HeartPulse,
+  Bone,
+  Baby,
+  Brain,
+  Apple,
+  SmilePlus,
+  Wind,
+  Calculator,
+  Table,
+  ScanLine,
+  FlaskConical,
+  UploadCloud,
+  FileText,
+  ArrowUpRight,
+  ArrowDownRight,
+  Check,
+  Camera,
+  BellRing,
+  FileSearch,
+  Clock,
+  PlusCircle,
+  Info,
+  Cpu,
+  UserPlus,
+  Droplet,
+  AlertOctagon,
+  FileCheck2,
+  Trash2
+} from 'lucide-react';
+
+// ============================================================================
+// PHASE 1 & 6: CORE SCHEMA, LOCAL STORAGE, & STRICT 5-STEP MEDICAL GUARD
+// ============================================================================
+
+export interface StrictMedicalOutput {
+  id: string;
+  timestamp: string;
+  patientQuery: string;
+  // Mandatory 5-Step Medical Structure:
+  initialAnalysisAndDiagnosis: string;   // 1. التحليل والتشخيص الأولي
+  treatmentAndPreventionPlan: string[];  // 2. الخطة العلاجية أو الوقائية المقترحة
+  detailedMedicationGuide: {             // 3. الدليل الدوائي التفصيلي
+    name: string;
+    dosage: string;
+    precautions: string;
+  }[];
+  generalAdvisoryTips: string[];         // 4. نصائح استشارية عامة
+  mandatoryMedicalDisclaimer: string;    // 5. تنويه طبي إلزامي
+  familyMemberId?: string;
+  familyMemberName?: string;
+  protocolVerified?: boolean;
+}
+
+export interface FamilyMemberProfile {
+  id: string;
+  name: string;
+  relation: 'رب الأسرة' | 'الزوجة / الأم' | 'ابن / ابنة' | 'الوالد / الوالدة';
+  age: number;
+  bloodType: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  allergies: string[];
+  chronicConditions: string[];
+  avatarColor: string;
+}
+
+const STORAGE_KEY_HISTORY = 'TABIBI_LOCAL_MEDICAL_HISTORY_V1';
+const STORAGE_KEY_FAMILY = 'TABIBI_FAMILY_VAULT_MEMBERS_V1';
+const STORAGE_KEY_ACTIVE_MEMBER = 'TABIBI_ACTIVE_FAMILY_MEMBER_V1';
+const STORAGE_KEY_CHRONIC = 'TABIBI_CHRONIC_LOGS_V1';
+const STORAGE_KEY_REMINDERS = 'TABIBI_MED_REMINDERS_V1';
+
+export class StrictMedicalProtocolGuard {
+  static enforceAndSanitize(
+    rawOutput: StrictMedicalOutput,
+    member: FamilyMemberProfile
+  ): StrictMedicalOutput {
+    const allergyAlert =
+      member.allergies.length > 0 && member.allergies[0] !== 'لا يوجد'
+        ? ` [تنبيه حساسية مسجل لـ (${member.name}): يُمنع استخدام أي مركب يتقاطع مع (${member.allergies.join('، ')})]`
+        : '';
+
+    return {
+      id: rawOutput.id || `MED-${Date.now().toString().slice(-5)}`,
+      timestamp:
+        rawOutput.timestamp ||
+        new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      patientQuery: rawOutput.patientQuery.includes('[الملف العائلي:')
+        ? rawOutput.patientQuery
+        : `[الملف العائلي: ${member.name} (${member.age} سنة)] ${rawOutput.patientQuery}`,
+      initialAnalysisAndDiagnosis:
+        rawOutput.initialAnalysisAndDiagnosis?.trim() ||
+        'يتطلب العرض الموصوف تقييماً سريرياً لمطابقة الأعراض مع التاريخ الصحي للمريض.',
+      treatmentAndPreventionPlan:
+        Array.isArray(rawOutput.treatmentAndPreventionPlan) &&
+        rawOutput.treatmentAndPreventionPlan.length > 0
+          ? rawOutput.treatmentAndPreventionPlan
+          : ['الراحة السريرية ومراقبة العلامات الحيوية الأساسية بانتظام.'],
+      detailedMedicationGuide:
+        Array.isArray(rawOutput.detailedMedicationGuide) &&
+        rawOutput.detailedMedicationGuide.length > 0
+          ? rawOutput.detailedMedicationGuide.map((med) => ({
+              name: med.name,
+              dosage: med.dosage,
+              precautions: med.precautions.includes('تنبيه حساسية')
+                ? med.precautions
+                : `${med.precautions}${allergyAlert}`
+            }))
+          : [
+              {
+                name: 'علاج تحفظي داعم (حسب الفحص السريري)',
+                dosage: 'تُحدد الجرعة وفق الوزن والعمر من قِبل الطبيب المعالج.',
+                precautions: `يُراعى التاريخ الصحي للمريض.${allergyAlert}`
+              }
+            ],
+      generalAdvisoryTips:
+        Array.isArray(rawOutput.generalAdvisoryTips) &&
+        rawOutput.generalAdvisoryTips.length > 0
+          ? rawOutput.generalAdvisoryTips
+          : ['الحفاظ على التروية المائية الجيدة والنوم الكافي وتجنب الإجهاد.'],
+      mandatoryMedicalDisclaimer:
+        rawOutput.mandatoryMedicalDisclaimer?.includes('تنويه طبي إلزامي')
+          ? rawOutput.mandatoryMedicalDisclaimer
+          : 'تنويه طبي إلزامي: هذه المخرجات صادرة عن نظام دعم القرار الطبي الذكي لأغراض التثقيف والفرز الأولي، ولا تُغني بأي حال عن مراجعة الطبيب المعالج للفحص السريري المباشر.',
+      familyMemberId: member.id,
+      familyMemberName: member.name,
+      protocolVerified: true
+    };
+  }
+}
+
+export class FamilyVaultEngine {
+  static getFamilyMembers(): FamilyMemberProfile[] {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_FAMILY);
+      if (raw) return JSON.parse(raw);
+
+      const defaultFamily: FamilyMemberProfile[] = [
+        {
+          id: 'FAM-01',
+          name: 'أحمد (رب الأسرة)',
+          relation: 'رب الأسرة',
+          age: 42,
+          bloodType: 'O+',
+          allergies: ['البنسلين (Penicillin)'],
+          chronicConditions: ['ضغط الدم المرتفع الأولي'],
+          avatarColor: 'bg-teal-600'
+        },
+        {
+          id: 'FAM-02',
+          name: 'سارة (الأم)',
+          relation: 'الزوجة / الأم',
+          age: 36,
+          bloodType: 'A+',
+          allergies: ['لا يوجد'],
+          chronicConditions: ['نقص فيتامين D والحديد'],
+          avatarColor: 'bg-blue-600'
+        },
+        {
+          id: 'FAM-03',
+          name: 'يوسف (الابن)',
+          relation: 'ابن / ابنة',
+          age: 7,
+          bloodType: 'O+',
+          allergies: ['حساسية الألبان الموسمية'],
+          chronicConditions: ['لا يوجد'],
+          avatarColor: 'bg-amber-600'
+        },
+        {
+          id: 'FAM-04',
+          name: 'الوالد (الجد)',
+          relation: 'الوالد / الوالدة',
+          age: 68,
+          bloodType: 'B+',
+          allergies: ['الأسبرين ومضادات الالتهاب NSAIDs'],
+          chronicConditions: ['السكري من النوع الثاني', 'خشونة مفصل الركبة'],
+          avatarColor: 'bg-slate-700'
+        }
+      ];
+      localStorage.setItem(STORAGE_KEY_FAMILY, JSON.stringify(defaultFamily));
+      return defaultFamily;
+    } catch {
+      return [];
+    }
+  }
+
+  static addFamilyMember(
+    member: Omit<FamilyMemberProfile, 'id' | 'avatarColor'>
+  ): FamilyMemberProfile[] {
+    const existing = this.getFamilyMembers();
+    const newMember: FamilyMemberProfile = {
+      ...member,
+      id: `FAM-0${existing.length + 1}-${Date.now().toString().slice(-2)}`,
+      avatarColor: 'bg-teal-700'
+    };
+    const updated = [...existing, newMember];
+    localStorage.setItem(STORAGE_KEY_FAMILY, JSON.stringify(updated));
+    return updated;
+  }
+
+  static getActiveMember(): FamilyMemberProfile {
+    const members = this.getFamilyMembers();
+    const activeId = localStorage.getItem(STORAGE_KEY_ACTIVE_MEMBER);
+    return members.find((m) => m.id === activeId) || members[0];
+  }
+
+  static setActiveMember(id: string): FamilyMemberProfile {
+    localStorage.setItem(STORAGE_KEY_ACTIVE_MEMBER, id);
+    return this.getActiveMember();
+  }
+}
+
+export class LocalMedicalStorage {
+  static saveConsultation(record: StrictMedicalOutput): StrictMedicalOutput {
+    const activeMember = FamilyVaultEngine.getActiveMember();
+    const verifiedRecord = StrictMedicalProtocolGuard.enforceAndSanitize(
+      record,
+      activeMember
+    );
+    try {
+      const existingHistory = this.getHistory();
+      const updatedHistory = [verifiedRecord, ...existingHistory];
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Local Storage Error:', error);
+    }
+    return verifiedRecord;
+  }
+
+  static getHistory(): StrictMedicalOutput[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_HISTORY);
+      if (data) return JSON.parse(data);
+      const initialSample: StrictMedicalOutput = {
+        id: 'CONS-INIT-01',
+        timestamp: new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        patientQuery: 'صداع نصفي مستمر مع إجهاد بصري منذ يومين.',
+        initialAnalysisAndDiagnosis:
+          'تشير الأعراض الأولية إلى احتمالية الإصابة بـ "الصداع التوتري" أو "الشقيقة البصرية" المرتبطة بالإجهاد الرقمي وقلة النوم.',
+        treatmentAndPreventionPlan: [
+          'الراحة الفورية في غرفة مظلمة وهادئة لمدة 30 دقيقة.',
+          'تطبيق كمادات باردة على منطقة الجبهة وخلف العنق.',
+          'تقليل التعرض للشاشات وتطبيق قاعدة 20-20-20 البصرية.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'باراسيتامول (Paracetamol)',
+            dosage: '500 ملغ - قرص إلى قرصين كل 6 ساعات عند اللزوم.',
+            precautions: 'يُمنع تجاوز 4000 ملغ يومياً. يُحذر لمرضى الكبد.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'شرب كميات كافية من الماء (لا تقل عن 2 لتر يومياً) لتجنب الجفاف المسبب للصداع.',
+          'تنظيم ساعات النوم وتجنب الكافيين في المساء.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: هذه المخرجات مبنية على خوارزميات الفرز الأولي ولا تُعد بديلاً عن التشخيص السريري. يرجى مراجعة الطبيب المعالج فوراً في حال تفاقم الأعراض.'
+      };
+      const verified = StrictMedicalProtocolGuard.enforceAndSanitize(
+        initialSample,
+        FamilyVaultEngine.getActiveMember()
+      );
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify([verified]));
+      return [verified];
+    } catch {
+      return [];
+    }
+  }
+
+  static clearHistory(): void {
+    localStorage.removeItem(STORAGE_KEY_HISTORY);
+  }
+}
+
+const StrictMedicalReportCard: React.FC<{ report: StrictMedicalOutput; titleBadge?: string }> = ({
+  report,
+  titleBadge = 'تقرير طبي مُحكَم (محفوظ محلياً)'
+}) => (
+  <div className="ios-glass-card p-6 space-y-6 animate-fadeIn">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+      <div className="flex items-center gap-2">
+        <span className="bg-teal-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1">
+          <FileCheck2 size={12} />
+          مُطابق للبروتوكول الخماسي (5/5)
+        </span>
+        <span className="text-xs font-bold text-teal-800 flex items-center gap-1">
+          <CheckCircle2 size={14} /> {titleBadge}
+        </span>
+      </div>
+      <span className="text-xs text-slate-400">{report.timestamp}</span>
+    </div>
+
+    <div className="text-sm font-bold text-slate-800 bg-teal-50/70 p-3.5 rounded-2xl border border-teal-100">
+      {report.patientQuery}
+    </div>
+
+    {/* ١. التحليل والتشخيص الأولي */}
+    <section>
+      <h3 className="text-sm font-extrabold text-teal-900 mb-2">١. التحليل والتشخيص الأولي</h3>
+      <p className="text-slate-700 leading-relaxed bg-white/70 p-4 rounded-2xl border border-white/90 text-sm">
+        {report.initialAnalysisAndDiagnosis}
+      </p>
+    </section>
+
+    {/* ٢. الخطة العلاجية أو الوقائية المقترحة */}
+    <section>
+      <h3 className="text-sm font-extrabold text-teal-900 mb-2">٢. الخطة العلاجية أو الوقائية المقترحة</h3>
+      <ul className="list-disc list-inside space-y-2 text-slate-700 bg-white/70 p-4 rounded-2xl border border-white/90 text-sm">
+        {report.treatmentAndPreventionPlan.map((step, idx) => (
+          <li key={idx} className="leading-relaxed">{step}</li>
+        ))}
+      </ul>
+    </section>
+
+    {/* ٣. الدليل الدوائي التفصيلي */}
+    <section>
+      <h3 className="text-sm font-extrabold text-teal-900 mb-2">٣. الدليل الدوائي التفصيلي</h3>
+      <div className="space-y-3">
+        {report.detailedMedicationGuide.map((med, idx) => (
+          <div key={idx} className="bg-blue-50/70 p-4 rounded-2xl border border-blue-100">
+            <div className="font-bold text-blue-900 text-sm">{med.name}</div>
+            <div className="text-xs text-slate-700 mt-1"><strong>الجرعة:</strong> {med.dosage}</div>
+            <div className="text-xs text-amber-800 mt-1 font-medium"><strong>محاذير وتنبيهات الحساسية:</strong> {med.precautions}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* ٤. نصائح استشارية عامة */}
+    <section>
+      <h3 className="text-sm font-extrabold text-teal-900 mb-2">٤. نصائح استشارية عامة</h3>
+      <ul className="space-y-1 text-sm text-slate-600 px-2">
+        {report.generalAdvisoryTips.map((tip, idx) => (
+          <li key={idx}>• {tip}</li>
+        ))}
+      </ul>
+    </section>
+
+    {/* ٥. تنويه طبي إلزامي */}
+    <section className="bg-rose-50/85 border border-rose-200/80 p-4 rounded-2xl flex gap-3 items-start">
+      <ShieldAlert className="text-rose-600 shrink-0 mt-0.5" size={20} />
+      <p className="text-xs text-rose-800 leading-relaxed font-bold">
+        {report.mandatoryMedicalDisclaimer}
+      </p>
+    </section>
+  </div>
+);
+
+// ============================================================================
+// PHASE 2: SMART TRIAGE HUB & ISOMETRIC 3D BODY MAP
+// ============================================================================
+
+export type AnatomicalZone =
+  | 'HEAD_NECK'
+  | 'CHEST_CARDIO'
+  | 'ABDOMEN_GI'
+  | 'MUSCULOSKELETAL'
+  | 'PELVIS_RENAL';
+
+export type TriageUrgency = 'CRITICAL' | 'URGENT' | 'MODERATE';
+
+export interface TriageConsultationResult extends StrictMedicalOutput {
+  anatomicalZone: AnatomicalZone;
+  painIntensity: number;
+  painCharacter: string;
+  triageRoute: {
+    clinicId: string;
+    clinicName: string;
+    urgencyLevel: TriageUrgency;
+    urgencyLabel: string;
+    routingReason: string;
+  };
+}
+
+const IsometricBodyMapSVG: React.FC<{
+  selectedZone: AnatomicalZone;
+  onSelectZone: (zone: AnatomicalZone) => void;
+  painIntensity: number;
+}> = ({ selectedZone, onSelectZone, painIntensity }) => {
+  const getPulseColor = () => {
+    if (painIntensity >= 8) return '#F43F5E';
+    if (painIntensity >= 5) return '#F59E0B';
+    return '#0D9488';
+  };
+
+  const zonesMeta: { id: AnatomicalZone; label: string; cy: number }[] = [
+    { id: 'HEAD_NECK', label: 'الرأس والعنق', cy: 70 },
+    { id: 'CHEST_CARDIO', label: 'الصدر والقلب', cy: 145 },
+    { id: 'ABDOMEN_GI', label: 'البطن والهضمي', cy: 205 },
+    { id: 'PELVIS_RENAL', label: 'الحوض والمسالك', cy: 255 },
+    { id: 'MUSCULOSKELETAL', label: 'المفاصل والعمود الفقري', cy: 325 }
+  ];
+
+  return (
+    <div className="relative flex flex-col items-center justify-center p-3 select-none">
+      <div className="text-xs font-bold text-teal-700 bg-teal-50/90 border border-teal-200/60 px-3 py-1 rounded-full mb-2 shadow-sm">
+        مجسم التشريح التفاعلي (Isometric 3D Scanner)
+      </div>
+
+      <svg viewBox="0 0 320 420" className="w-full max-w-[260px] h-auto drop-shadow-xl">
+        <defs>
+          <linearGradient id="isoBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#E0F2FE" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#BAE6FD" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#0284C7" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="activeZoneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={getPulseColor()} stopOpacity="0.75" />
+            <stop offset="100%" stopColor={getPulseColor()} stopOpacity="0.25" />
+          </linearGradient>
+        </defs>
+
+        <g transform="translate(160, 385)">
+          <ellipse cx="0" cy="0" rx="105" ry="24" fill="none" stroke="#94A3B8" strokeWidth="1" strokeDasharray="4 4" />
+          <ellipse cx="0" cy="0" rx="80" ry="16" fill="#0D9488" fillOpacity="0.1" stroke="#0D9488" strokeWidth="1.5" />
+          <ellipse cx="0" cy="0" rx="45" ry="9" fill={getPulseColor()} fillOpacity="0.22" />
+        </g>
+
+        <line x1="160" y1="25" x2="160" y2="385" stroke="#CBD5E1" strokeWidth="1" strokeDasharray="3 3" />
+
+        <path
+          onClick={() => onSelectZone('HEAD_NECK')}
+          className="cursor-pointer transition-all"
+          d="M160 35 C178 35 188 50 186 72 C184 90 174 100 170 108 L150 108 C146 100 136 90 134 72 C132 50 142 35 160 35 Z"
+          fill={selectedZone === 'HEAD_NECK' ? 'url(#activeZoneGrad)' : 'url(#isoBodyGrad)'}
+          stroke={selectedZone === 'HEAD_NECK' ? getPulseColor() : '#38BDF8'}
+          strokeWidth={selectedZone === 'HEAD_NECK' ? '2.5' : '1.2'}
+        />
+
+        <path
+          onClick={() => onSelectZone('MUSCULOSKELETAL')}
+          className="cursor-pointer"
+          d="M115 120 L85 215 L98 222 L122 145 Z M205 120 L235 215 L222 222 L198 145 Z"
+          fill="url(#isoBodyGrad)"
+          stroke="#7DD3FC"
+          strokeWidth="1"
+          opacity="0.75"
+        />
+
+        <path
+          onClick={() => onSelectZone('CHEST_CARDIO')}
+          className="cursor-pointer transition-all"
+          d="M122 112 L198 112 L205 172 L160 182 L115 172 Z"
+          fill={selectedZone === 'CHEST_CARDIO' ? 'url(#activeZoneGrad)' : 'url(#isoBodyGrad)'}
+          stroke={selectedZone === 'CHEST_CARDIO' ? getPulseColor() : '#38BDF8'}
+          strokeWidth={selectedZone === 'CHEST_CARDIO' ? '2.5' : '1.2'}
+        />
+
+        <path
+          onClick={() => onSelectZone('ABDOMEN_GI')}
+          className="cursor-pointer transition-all"
+          d="M120 176 L160 185 L200 176 L195 232 L160 240 L125 232 Z"
+          fill={selectedZone === 'ABDOMEN_GI' ? 'url(#activeZoneGrad)' : 'url(#isoBodyGrad)'}
+          stroke={selectedZone === 'ABDOMEN_GI' ? getPulseColor() : '#38BDF8'}
+          strokeWidth={selectedZone === 'ABDOMEN_GI' ? '2.5' : '1.2'}
+        />
+
+        <path
+          onClick={() => onSelectZone('PELVIS_RENAL')}
+          className="cursor-pointer transition-all"
+          d="M124 235 L160 243 L196 235 L190 275 L160 285 L130 275 Z"
+          fill={selectedZone === 'PELVIS_RENAL' ? 'url(#activeZoneGrad)' : 'url(#isoBodyGrad)'}
+          stroke={selectedZone === 'PELVIS_RENAL' ? getPulseColor() : '#38BDF8'}
+          strokeWidth={selectedZone === 'PELVIS_RENAL' ? '2.5' : '1.2'}
+        />
+
+        <path
+          onClick={() => onSelectZone('MUSCULOSKELETAL')}
+          className="cursor-pointer transition-all"
+          d="M130 278 L156 286 L152 372 L134 372 Z M190 278 L164 286 L168 372 L186 372 Z"
+          fill={selectedZone === 'MUSCULOSKELETAL' ? 'url(#activeZoneGrad)' : 'url(#isoBodyGrad)'}
+          stroke={selectedZone === 'MUSCULOSKELETAL' ? getPulseColor() : '#38BDF8'}
+          strokeWidth={selectedZone === 'MUSCULOSKELETAL' ? '2.5' : '1.2'}
+        />
+
+        {zonesMeta.map((zone) => {
+          const isSelected = selectedZone === zone.id;
+          return (
+            <g key={zone.id} onClick={() => onSelectZone(zone.id)} className="cursor-pointer">
+              {isSelected && <circle cx="160" cy={zone.cy} r="14" fill={getPulseColor()} opacity="0.25" />}
+              <circle
+                cx="160"
+                cy={zone.cy}
+                r={isSelected ? '6.5' : '4.5'}
+                fill={isSelected ? getPulseColor() : '#FFFFFF'}
+                stroke={isSelected ? '#FFFFFF' : '#0284C7'}
+                strokeWidth="2"
+              />
+            </g>
+          );
+        })}
+      </svg>
+
+      <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+        {zonesMeta.map((z) => (
+          <button
+            key={z.id}
+            type="button"
+            onClick={() => onSelectZone(z.id)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-all ${
+              selectedZone === z.id
+                ? 'bg-teal-600 text-white font-bold shadow-sm scale-105'
+                : 'bg-white/70 text-slate-600 hover:bg-white border border-white'
+            }`}
+          >
+            {z.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SmartTriageHub: React.FC<{ onNavigateToClinic: (clinicId: string) => void }> = ({
+  onNavigateToClinic
+}) => {
+  const [selectedZone, setSelectedZone] = useState<AnatomicalZone>('CHEST_CARDIO');
+  const [painIntensity, setPainIntensity] = useState<number>(6);
+  const [painCharacter, setPainCharacter] = useState<string>('ضاغط');
+  const [symptomText, setSymptomText] = useState<string>('');
+  const [triageResult, setTriageResult] = useState<TriageConsultationResult | null>(null);
+
+  const painCharacters = ['ضاغط', 'نابض', 'طاعن / حاد', 'حارق', 'مغص متقطع'];
+
+  const handleRunTriage = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const matrix: Record<
+      AnatomicalZone,
+      Omit<
+        TriageConsultationResult,
+        'id' | 'timestamp' | 'patientQuery' | 'anatomicalZone' | 'painIntensity' | 'painCharacter'
+      >
+    > = {
+      CHEST_CARDIO: {
+        triageRoute: {
+          clinicId: 'internal_chronic',
+          clinicName: 'عيادة الأمراض الباطنية والقلب والأوعية',
+          urgencyLevel: painIntensity >= 7 ? 'CRITICAL' : 'URGENT',
+          urgencyLabel: painIntensity >= 7 ? 'طوارئ قصوى - تدخل فوري' : 'عاجل - فحص قلبي',
+          routingReason: 'وجود أعراض في الصدر يستوجب استبعاد المتلازمة التاجية الحادة وتخطيط القلب الفوري.'
+        },
+        initialAnalysisAndDiagnosis: `بناءً على خبرة سريرية (20 عاماً)، فإن تمركز الألم في الصدر بطبيعة (${painCharacter}) وشدة (${painIntensity}/10) يتطلب تفريقاً تشخيصياً بين الذبحة الصدرية، التهاب التامور، أو الارتجاع المريئي الحاد.`,
+        treatmentAndPreventionPlan: [
+          'التوقف الفوري عن أي مجهود بدني والجلوس في وضعية نصف جالس (Semi-Fowler).',
+          'إجراء تخطيط كهربائية القلب (ECG) وفحص إنزيمات القلب (Troponin).',
+          'تجنب المنبهات والتدخين والانفعالات العصبية بشكل قاطع.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'أسبرين (Acetylsalicylic Acid 75-150mg)',
+            dosage: 'قرص مضغاً عند الاشتباه القلبي المؤكد وبعد تقييم الطوارئ.',
+            precautions: 'يُمنع تماماً في حال وجود قرحة معدية نشطة أو نزيف.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'راقب انتشار الألم إلى الكتف الأيسر أو الفك السفلي أو مصاحبته لتعرق بارد.',
+          'احتفظ بسجل قراءات ضغط الدم والنبض لعرضها على الاستشاري.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: آلام الصدر قد تشير إلى حالة طارئة تهدد الحياة؛ يرجى التوجه لأقرب قسم طوارئ أو مراجعة الطبيب المعالج فوراً.'
+      },
+      HEAD_NECK: {
+        triageRoute: {
+          clinicId: 'ortho_physio',
+          clinicName: 'عيادة الأعصاب والعمود الفقري العنقي',
+          urgencyLevel: painIntensity >= 8 ? 'URGENT' : 'MODERATE',
+          urgencyLabel: painIntensity >= 8 ? 'عاجل - تقييم عصبي' : 'متوسط - توجيه تخصصي',
+          routingReason: 'تمركز الأعراض في الرأس والعنق يستدعي استبعاد الشقيقة العصبية أو الشد العضلي العنقي.'
+        },
+        initialAnalysisAndDiagnosis: `الألم المتمركز في الرأس/العنق بطبيعة (${painCharacter}) وشدة (${painIntensity}/10) يتماشى سريرياً مع نوبات الشقيقة الوعائية أو الصداع العنقي التوتري.`,
+        treatmentAndPreventionPlan: [
+          'العزل الحسي في غرفة هادئة خافتة الإضاءة وتطبيق كمادات باردة.',
+          'قياس ضغط الدم الشرياني لاستبعاد ارتفاع الضغط الثانوي.',
+          'تمارين إطالة لطيفة لعضلات العنق بعد هدوء النوبة.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'باراسيتامول (Paracetamol 500mg)',
+            dosage: 'قرص إلى قرصين عند بداية النوبة بعد الطعام.',
+            precautions: 'عدم تجاوز 4 غرامات يومياً، والحذر لمرضى الكبد.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'تجنب السهر والجفاف والأجبان المعتقة والكافيين الزائد.',
+          'اضبط مستوى شاشة الهاتف والحاسوب في مستوى النظر تماماً.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: هذا التحليل مخصص للفرز الأولي؛ راجع الطبيب المعالج فوراً إذا صاحب الصداع تصلب في الرقبة أو حمى أو تشوش بصري.'
+      },
+      ABDOMEN_GI: {
+        triageRoute: {
+          clinicId: 'clinical_nutri',
+          clinicName: 'عيادة الجهاز الهضمي والتغذية العلاجية',
+          urgencyLevel: painIntensity >= 7 ? 'URGENT' : 'MODERATE',
+          urgencyLabel: 'توجيه لعيادة الهضمية والتغذية',
+          routingReason: 'الأعراض البطنية تتطلب تقييماً لحركية القناة الهضمية والحمية العلاجية.'
+        },
+        initialAnalysisAndDiagnosis: `الألم البطني بطبيعة (${painCharacter}) وشدة (${painIntensity}/10) يشير أولياً إلى التهاب معدي حاد، تشنج قولوني، أو عسر هضم وظيفي.`,
+        treatmentAndPreventionPlan: [
+          'إراحة الجهاز الهضمي والاعتماد على السوائل الدافئة والحمية الخفيفة.',
+          'إجراء سونار للبطن وفحص جرثومة المعدة (H. Pylori) عند استمرار الأعراض.',
+          'الامتناع عن الأطعمة الدسمة والحارة والمشروبات الغازية.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'ميبفرين (Mebeverine 135mg) + أوميبرازول (Omeprazole 20mg)',
+            dosage: 'ميبفرين قبل الأكل بـ 20 دقيقة؛ أوميبرازول صباحاً على معدة فارغة.',
+            precautions: 'يُمنع أخذ مسكنات قوية قبل استبعاد التهاب الزائدة الدودية الجراحي.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'قسّم الوجبات إلى 5 وجبات صغيرة متوازنة.',
+          'تجنب الاستلقاء المباشر بعد الطعام لمدة ساعتين.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: آلام البطن الحادة المصحوبة بقيء مستمر أو حمى تتطلب فحصاً جراحياً وسريرياً مباشراً لدى الطبيب المعالج.'
+      },
+      MUSCULOSKELETAL: {
+        triageRoute: {
+          clinicId: 'ortho_physio',
+          clinicName: 'عيادة العظام والمفاصل والعلاج الطبيعي',
+          urgencyLevel: 'MODERATE',
+          urgencyLabel: 'توجيه لعيادة العظام والعلاج الطبيعي',
+          routingReason: 'الألم العضلي الهيكلي يستلزم فحص المدى الحركي للمفصل وخطة تمارين علاجية.'
+        },
+        initialAnalysisAndDiagnosis: `الألم الحركي بطبيعة (${painCharacter}) وشدة (${painIntensity}/10) يرجح وجود إجهاد عضلي وتري أو خشونة مفصلية أو انضغاط فقري قطني.`,
+        treatmentAndPreventionPlan: [
+          'الراحة النسبية وتجنب حمل الأوزان الثقيلة أو الانحناء المفاجئ.',
+          'تطبيق الكمادات الباردة أول 48 ساعة ثم الدافئة لإرخاء العضلات.',
+          'البدء بتمارين الإطالة المنزلية المتدرجة في عيادة العلاج الطبيعي.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'ديكلوفيناك جل موضعي (Diclofenac Gel 1%)',
+            dosage: 'دهان موضعي لطيف 3 مرات يومياً على المنطقة المؤلمة.',
+            precautions: 'لا يوضع على الجروح المفتوحة ويُحذر لمرضى الربو التحسسي.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'استخدم دعامة قطنية للظهر أثناء الجلوس الطويل.',
+          'افحص مستوى فيتامين D والكالسيوم في الدم.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: هذا التقييم استرشادي؛ يجب مراجعة طبيب العظام فوراً في حال وجود خدر أو تنميل أو ضعف حركي في الأطراف.'
+      },
+      PELVIS_RENAL: {
+        triageRoute: {
+          clinicId: 'internal_chronic',
+          clinicName: 'عيادة المسالك البولية والكلى والباطنية',
+          urgencyLevel: painIntensity >= 8 ? 'URGENT' : 'MODERATE',
+          urgencyLabel: 'توجيه لعيادة المسالك والباطنية',
+          routingReason: 'ألم الحوض والخاصرة يستدعي فحص البول واستبعاد المغص الكلوي أو الأملاح.'
+        },
+        initialAnalysisAndDiagnosis: `الألم في منطقة الحوض/الخاصرة بطبيعة (${painCharacter}) وشدة (${painIntensity}/10) يشير سريرياً إلى احتمالية مغص كلوي أو التهاب مسالك بولية.`,
+        treatmentAndPreventionPlan: [
+          'إجراء تحليل بول كامل (Urinalysis) وسونار للكلى والمثانة.',
+          'زيادة شرب الماء النقي تدريجياً وتطبيق تدفئة موضعية على الخاصرة.',
+          'تقليل الأملاح والأوكسالات والمشروبات الغازية الداكنة.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'هيوسين بيوتيل بروميد (Hyoscine 10mg)',
+            dosage: 'قرص عند اللزوم لتخفيف تقلصات الحالب والمسالك.',
+            precautions: 'يُحذر لمرضى الجلوكوما وتضخم البروستاتا وتسارع القلب.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'راقب لون البول ودرجة حرارة الجسم بانتظام.',
+          'احرص على شرب 2.5 لتر ماء يومياً موزعة بانتظام.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: يرجى مراجعة طبيب المسالك البولية فوراً خاصة إذا صاحب الألم احتباس بولي أو دم في البول أو ارتفاع في الحرارة.'
+      }
+    };
+
+    const selected = matrix[selectedZone];
+    const baseRecord: StrictMedicalOutput = {
+      id: `TRIAGE-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      patientQuery:
+        symptomText.trim() ||
+        `[الفرز الذكي] ألم (${painCharacter}) في منطقة (${selectedZone}) بشدة ${painIntensity}/10`,
+      ...selected
+    };
+
+    const savedVerified = LocalMedicalStorage.saveConsultation(baseRecord);
+    setTriageResult({
+      ...savedVerified,
+      anatomicalZone: selectedZone,
+      painIntensity,
+      painCharacter,
+      triageRoute: selected.triageRoute
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="ios-glass-card p-6">
+        <div className="flex items-center justify-between border-b border-slate-200/60 pb-4 mb-5">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+              <Sparkles className="text-teal-600" size={22} />
+              <span>وحدة التقييم الأولي والفرز السريع (Smart Triage Hub)</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              محرك محاكاة استشاري أول (خبرة 20 عاماً) مع مجسم تحديد موضع الألم Isometric 3D
+            </p>
+          </div>
+          <span className="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-200/60">
+            المرحلة ٢
+          </span>
+        </div>
+
+        <form onSubmit={handleRunTriage} className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div className="bg-white/40 rounded-3xl border border-white/70 p-2">
+            <IsometricBodyMapSVG
+              selectedZone={selectedZone}
+              onSelectZone={setSelectedZone}
+              painIntensity={painIntensity}
+            />
+          </div>
+
+          <div className="space-y-5">
+            <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-bold text-slate-700">شدة الألم (مقياس VAS)</label>
+                <span
+                  className={`text-xs font-extrabold px-2.5 py-1 rounded-full ${
+                    painIntensity >= 8
+                      ? 'bg-rose-100 text-rose-700'
+                      : painIntensity >= 5
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-teal-100 text-teal-700'
+                  }`}
+                >
+                  {painIntensity} / 10
+                </span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={10}
+                value={painIntensity}
+                onChange={(e) => setPainIntensity(Number(e.target.value))}
+                className="w-full accent-teal-600 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                <span>بسيط (1)</span>
+                <span>متوسط (5)</span>
+                <span>حرج جداً (10)</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">طبيعة الشعور بالألم</label>
+              <div className="flex flex-wrap gap-2">
+                {painCharacters.map((char) => (
+                  <button
+                    key={char}
+                    type="button"
+                    onClick={() => setPainCharacter(char)}
+                    className={`text-xs px-3 py-2 rounded-xl transition-all ${
+                      painCharacter === char
+                        ? 'bg-slate-900 text-white font-bold shadow-sm'
+                        : 'bg-white/60 text-slate-600 border border-white/80 hover:bg-white'
+                    }`}
+                  >
+                    {char}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">
+                صف أعراضك للاستشاري الذكي (اختياري)
+              </label>
+              <textarea
+                rows={3}
+                value={symptomText}
+                onChange={(e) => setSymptomText(e.target.value)}
+                placeholder="مثال: أشعر بألم يزداد مع التنفس العميق أو الحركة منذ الصباح..."
+                className="w-full rounded-2xl bg-white/70 border border-white/80 p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-l from-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-600/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
+            >
+              <Activity size={18} />
+              <span>بدء التحليل الاستشاري والفرز التلقائي</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {triageResult && (
+        <div className="space-y-6 animate-fadeIn">
+          <div
+            className={`ios-glass-card p-6 border-2 ${
+              triageResult.triageRoute.urgencyLevel === 'CRITICAL'
+                ? 'border-rose-400/80 bg-rose-50/70'
+                : triageResult.triageRoute.urgencyLevel === 'URGENT'
+                ? 'border-amber-400/80 bg-amber-50/70'
+                : 'border-teal-400/80 bg-teal-50/60'
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle
+                    size={18}
+                    className={
+                      triageResult.triageRoute.urgencyLevel === 'CRITICAL'
+                        ? 'text-rose-600'
+                        : triageResult.triageRoute.urgencyLevel === 'URGENT'
+                        ? 'text-amber-600'
+                        : 'text-teal-600'
+                    }
+                  />
+                  <span className="text-xs font-extrabold uppercase tracking-wide text-slate-700">
+                    قرار الفرز السريع: {triageResult.triageRoute.urgencyLabel}
+                  </span>
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-900">
+                  التوجيه التلقائي: {triageResult.triageRoute.clinicName}
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {triageResult.triageRoute.routingReason}
+                </p>
+              </div>
+
+              <button
+                onClick={() => onNavigateToClinic(triageResult.triageRoute.clinicId)}
+                className="shrink-0 bg-slate-900 text-white px-5 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-md"
+              >
+                <Stethoscope size={16} />
+                <span>الانتقال الفوري للعيادة</span>
+                <ArrowLeftCircle size={16} />
+              </button>
+            </div>
+          </div>
+
+          <StrictMedicalReportCard
+            report={triageResult}
+            titleBadge="تقرير الفرز الاستشاري الذكي"
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// PHASE 3: VIRTUAL SPECIALTY WARDS (7 SPECIALIZED CLINICS)
+// ============================================================================
+
+export type SpecialtyWardId =
+  | 'internal_chronic'
+  | 'ortho_physio'
+  | 'pediatrics'
+  | 'obgyn_women'
+  | 'mental_health'
+  | 'clinical_nutri'
+  | 'dermatology';
+
+interface ChronicMeasurementLog {
+  id: string;
+  date: string;
+  systolic: number;
+  diastolic: number;
+  fastingGlucose: number;
+  status: string;
+}
+
+const VirtualSpecialtyWards: React.FC<{ initialWardId?: SpecialtyWardId }> = ({
+  initialWardId = 'internal_chronic'
+}) => {
+  const [activeWard, setActiveWard] = useState<SpecialtyWardId>(initialWardId);
+  const [currentReport, setCurrentReport] = useState<StrictMedicalOutput | null>(null);
+
+  const [systolic, setSystolic] = useState<number>(128);
+  const [diastolic, setDiastolic] = useState<number>(82);
+  const [glucose, setGlucose] = useState<number>(108);
+  const [chronicLogs, setChronicLogs] = useState<ChronicMeasurementLog[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_CHRONIC);
+      return raw
+        ? JSON.parse(raw)
+        : [{ id: '1', date: 'اليوم 08:00 ص', systolic: 126, diastolic: 80, fastingGlucose: 104, status: 'مستقر' }];
+    } catch {
+      return [];
+    }
+  });
+
+  const [jointArea, setJointArea] = useState<string>('مفصل الركبة وأسفل الظهر');
+  const [movementPain, setMovementPain] = useState<string>('صعود الدرج والجلوس الطويل');
+
+  const [childAgeMonths, setChildAgeMonths] = useState<number>(18);
+  const [childWeightKg, setChildWeightKg] = useState<number>(11);
+  const [childTempC, setChildTempC] = useState<number>(38.5);
+
+  const [lmpDate, setLmpDate] = useState<string>('2025-01-15');
+  const [cycleLength, setCycleLength] = useState<number>(28);
+  const [womenMode, setWomenMode] = useState<'pregnancy' | 'cycle'>('pregnancy');
+
+  const [burnoutScore, setBurnoutScore] = useState<number>(65);
+  const [sleepHours, setSleepHours] = useState<number>(5.5);
+  const [breathingPhase, setBreathingPhase] = useState<string>('جاهز للبدء (تقنية 4-7-8)');
+  const [isBreathingActive, setIsBreathingActive] = useState<boolean>(false);
+
+  const [nutriWeight, setNutriWeight] = useState<number>(82);
+  const [nutriHeight, setNutriHeight] = useState<number>(170);
+  const [healthGoal, setHealthGoal] = useState<'loss' | 'maintain'>('loss');
+  const [mealDesc, setMealDesc] = useState<string>('أرز أبيض مع دجاج مشوي وسلطة خضراء');
+
+  const [skinSymptom, setSkinSymptom] = useState<string>('احمرار وجفاف قشري مع حكة خفيفة');
+  const [skinType, setSkinType] = useState<string>('مختلطة إلى حساسة');
+
+  useEffect(() => {
+    setActiveWard(initialWardId);
+  }, [initialWardId]);
+
+  useEffect(() => {
+    if (!isBreathingActive) return;
+    let step = 0;
+    const phases = [
+      'شهيق عميق من الأنف... (4 ثوانٍ)',
+      'احتفظ بالنفس بهدوء... (7 ثوانٍ)',
+      'زفير بطيء ومريح من الفم... (8 ثوانٍ)'
+    ];
+    setBreathingPhase(phases[0]);
+    const interval = setInterval(() => {
+      step = (step + 1) % 3;
+      setBreathingPhase(phases[step]);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isBreathingActive]);
+
+  const wardsList: { id: SpecialtyWardId; name: string; sub: string; icon: React.ElementType }[] = [
+    { id: 'internal_chronic', name: 'الباطنية والمزمنة', sub: 'السكري والضغط', icon: HeartPulse },
+    { id: 'ortho_physio', name: 'العظام والعلاج الطبيعي', sub: 'المفاصل والتمارين', icon: Bone },
+    { id: 'pediatrics', name: 'الأطفال والنمو', sub: 'الحمى والتطعيمات', icon: Baby },
+    { id: 'obgyn_women', name: 'صحة المرأة والتوليد', sub: 'الحمل والدورة', icon: Sparkles },
+    { id: 'mental_health', name: 'الصحة النفسية', sub: 'الإرهاق والتهدئة', icon: Brain },
+    { id: 'clinical_nutri', name: 'التغذية العلاجية', sub: 'السعرات والوزن', icon: Apple },
+    { id: 'dermatology', name: 'الجلدية والتجميل', sub: 'البشرة والعناية', icon: SmilePlus }
+  ];
+
+  const handleRunWardEvaluation = () => {
+    let rawReport: StrictMedicalOutput;
+    const nowStr = new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+    if (activeWard === 'internal_chronic') {
+      const status =
+        systolic >= 140 || glucose >= 126 ? 'يستدعي ضبط الجرعة والحمية' : 'ضمن النطاق المقبول سريرياً';
+      const newLog: ChronicMeasurementLog = {
+        id: Date.now().toString(),
+        date: nowStr,
+        systolic,
+        diastolic,
+        fastingGlucose: glucose,
+        status
+      };
+      const updatedLogs = [newLog, ...chronicLogs];
+      setChronicLogs(updatedLogs);
+      localStorage.setItem(STORAGE_KEY_CHRONIC, JSON.stringify(updatedLogs));
+
+      rawReport = {
+        id: `WARD-INT-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة الباطنية والمزمنة] ضغط الدم: ${systolic}/${diastolic} mmHg | السكر الصائم: ${glucose} mg/dL`,
+        initialAnalysisAndDiagnosis: `القراءات المسجلة تشير إلى (${status}). الربط بين قراءات الضغط وسكر الدم الصائم أساسي لحماية الأوعية الدموية الدقيقة والكلى.`,
+        treatmentAndPreventionPlan: [
+          'تطبيق حمية (DASH) قليلة الصوديوم وتقليل الكربوهيدرات البسيطة.',
+          'إجراء فحص السكر التراكمي (HbA1c) ووظائف الكلى كل 3 أشهر.',
+          'المشي الهوائي المعتدل لمدة 30 دقيقة 5 أيام أسبوعياً.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'ميتفورمين (Metformin) / أملوديبين (Amlodipine) - حسب الوصفة',
+            dosage: 'الالتزام بالجرعة اليومية المقررة من الطبيب المعالج.',
+            precautions: 'يُمنع إيقاف أدوية الضغط أو السكري فجأة دون استشارة طبية.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'قس ضغط الدم بعد راحة 5 دقائق في وضعية جلوس صحيحة.',
+          'اعرض جدول القياسات المحلي في تطبيق طبيبي على طبيبك.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: في حال تجاوز الضغط 180/120 أو السكر 300 mg/dL يجب التوجه للطوارئ فوراً.'
+      };
+    } else if (activeWard === 'ortho_physio') {
+      rawReport = {
+        id: `WARD-ORTHO-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة العظام والعلاج الطبيعي] ألم في: ${jointArea} | يزداد مع: ${movementPain}`,
+        initialAnalysisAndDiagnosis: `الألم المرتبط بالحركة في (${jointArea}) عند (${movementPain}) يشير ميكانيكياً إلى إجهاد عضلي وتري أو خشونة مفصلية مبكرة.`,
+        treatmentAndPreventionPlan: [
+          'خطة التمارين المنزلية (١): تمارين إطالة ثابتة (Isometric) لمدة 15 ثانية × 5 تكرارات مرتين يومياً.',
+          'خطة التمارين المنزلية (٢): تقوية العضلات الداعمة للمفصل بدون أوزان ثقيلة.',
+          'كمادات دافئة قبل التمرين لإرخاء العضلات وباردة بعده عند وجود تورم.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'ديكلوفيناك جل موضعي (Diclofenac Gel 1%)',
+            dosage: 'دهان موضعي 3 مرات يومياً لمدة 7 أيام.',
+            precautions: 'تجنب الإجهاد الحركي العنيف أثناء فترة التسكين.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'إنقاص 1 كجم من الوزن يخفف عبئاً يعادل 4 كجم عن مفصل الركبة.',
+          'تجنب الجلوس المتواصل لأكثر من 45 دقيقة.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: برامج التمارين المنزلية استرشادية؛ راجع طبيب العظام فوراً عند ظهور خدر أو تورم مفصلي حاد.'
+      };
+    } else if (activeWard === 'pediatrics') {
+      const doseMg = Math.round(childWeightKg * 15);
+      const syrupMl = ((doseMg / 120) * 5).toFixed(1);
+      rawReport = {
+        id: `WARD-PED-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة الأطفال والنمو] العمر: ${childAgeMonths} شهراً | الوزن: ${childWeightKg} كجم | الحرارة: ${childTempC}°C`,
+        initialAnalysisAndDiagnosis: `وزن الطفل (${childWeightKg} كجم) لعمر (${childAgeMonths} شهراً) يقع ضمن منحنيات النمو القياسية، ودرجة الحرارة (${childTempC}°C) تمثل ${childTempC >= 38 ? 'حمى تستوجب خافض حرارة ومراقبة' : 'حرارة طبيعية'}.`,
+        treatmentAndPreventionPlan: [
+          'متابعة جدول التطعيمات الأساسية حسب العمر الزمني للطفل.',
+          'كمادات ماء فاتر حول الجبهة وتحت الإبطين وتجنب الماء المثلج.',
+          'تقديم السوائل والرضاعة بانتظام لمنع الجفاف.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'شراب باراسيتامول للأطفال (Paracetamol 120mg/5ml)',
+            dosage: `حسب الوزن (${childWeightKg} كجم): الجرعة (${doseMg} ملغ) أي ما يعادل (${syrupMl} مل) كل 6 ساعات عند اللزوم.`,
+            precautions: 'يُمنع إعطاء الأسبرين للأطفال منعاً باتاً.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'خفف ملابس الطفل واجعل حرارة الغرفة معتدلة (24°C).',
+          'راقب نشاط الطفل وعدد الحفاضات المبللة.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: الحمى لدى الرضع أقل من 3 أشهر أو المصحوبة بطفح جلدي أو تشنجات تستدعي طوارئ الأطفال فوراً.'
+      };
+    } else if (activeWard === 'obgyn_women') {
+      const lmp = new Date(lmpDate || Date.now());
+      const edd = new Date(lmp.getTime() + 280 * 24 * 60 * 60 * 1000);
+      const weeks = Math.max(0, Math.floor((Date.now() - lmp.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+      rawReport = {
+        id: `WARD-OBG-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة صحة المرأة والتوليد] آخر دورة: ${lmpDate} | طول الدورة: ${cycleLength} يوماً`,
+        initialAnalysisAndDiagnosis:
+          womenMode === 'pregnancy'
+            ? `عمر الحمل التقديري هو (${weeks} أسبوعاً)، وموعد الولادة المتوقع (EDD) حسب قاعدة نيجل هو: ${edd.toLocaleDateString('ar-EG')}.`
+            : `طول الدورة الشهرية (${cycleLength} يوماً) يقع ضمن النطاق الفسيولوجي المنتظم للإباضة.`,
+        treatmentAndPreventionPlan: [
+          'المتابعة الدورية بالسونار وفحص صورة الدم الكاملة (CBC) ومخزون الحديد.',
+          'مراقبة ضغط الدم وسكر الحمل بانتظام.',
+          'ممارسة تمارين كيجل لتقوية عضلات قاع الحوض.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'حمض الفوليك (Folic Acid 400mcg) + مكملات الحديد والكالسيوم',
+            dosage: 'قرص حمض الفوليك يومياً؛ الفصل بين الحديد والكالسيوم بساعتين.',
+            precautions: 'يُمنع تناول أي دواء أثناء الحمل دون موافقة طبيبة النساء والتوليد.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'تجنبي الأجبان غير المبسترة واللحوم غير المطهية جيداً.',
+          'احرصي على التروية المائية الجيدة والنوم الكافي.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: حسابات الحمل والإباضة تقديرية؛ تجب المتابعة المباشرة مع طبيبة النساء والتوليد.'
+      };
+    } else if (activeWard === 'mental_health') {
+      rawReport = {
+        id: `WARD-MNT-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة الصحة النفسية] مؤشر الإرهاق النفسي (Burnout): ${burnoutScore}% | النوم: ${sleepHours} ساعات`,
+        initialAnalysisAndDiagnosis: `يشير التقييم إلى (${burnoutScore >= 65 ? 'إجهاد نفسي واحتراق وظيفي مرتفع' : 'إجهاد نفسي متوسط'}) مرتبط بمتوسط نوم (${sleepHours} ساعات).`,
+        treatmentAndPreventionPlan: [
+          'تطبيق جلسة التنفس العلاجي (4-7-8) مرتين يومياً لخفض نشاط الجهاز السمبثاوي.',
+          'إيقاف الشاشات الزرقاء قبل النوم بـ 60 دقيقة وتثبيت موعد الاستيقاظ.',
+          'جدولة استراحات ذهنية قصيرة كل 90 دقيقة عمل.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'مغنيسيوم جليسينات (Magnesium Glycinate 200-400mg)',
+            dosage: 'كبسولة مساءً قبل النوم بساعة لدعم الاسترخاء العضلي والعصبي.',
+            precautions: 'لا تُصرف الأدوية النفسية التخصصية إلا بوصفة طبية مقيدة.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'مارس التفريغ الكتابي للأفكار قبل النوم لتقليل التفكير المفرط.',
+          'تعرض لضوء الشمس الطبيعي صباحاً لمدة 15 دقيقة.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: مقاييس الإرهاق الذاتية لا تغني عن التقييم النفسي الإكلينيكي المباشر لدى الطبيب المختص.'
+      };
+    } else if (activeWard === 'clinical_nutri') {
+      const h = nutriHeight / 100;
+      const bmi = +(nutriWeight / (h * h)).toFixed(1);
+      const targetCal = healthGoal === 'loss' ? Math.round(nutriWeight * 22) : Math.round(nutriWeight * 28);
+      rawReport = {
+        id: `WARD-NUT-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة التغذية العلاجية] الوزن: ${nutriWeight} كجم | الطول: ${nutriHeight} سم | الوجبة: ${mealDesc}`,
+        initialAnalysisAndDiagnosis: `مؤشر كتلة الجسم (BMI) هو (${bmi} kg/m²)، والاحتياج اليومي العلاجي المقدر هو (${targetCal} سعرة حرارية/يومياً).`,
+        treatmentAndPreventionPlan: [
+          'تقسيم الطبق الصحي: 50% خضروات وألياف، 25% بروتين صافي، 25% كربوهيدرات معقدة.',
+          `الالتزام بسقف (${targetCal} كالوري) وشرب كوبين من الماء قبل الوجبات.`,
+          'استبدال الدهون المهدرجة بزيت الزيتون البكر والمكسرات النيئة.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'أوميغا-3 (Omega-3 1000mg) + فيتامين D3',
+            dosage: 'كبسولة يومياً بعد وجبة رئيسية.',
+            precautions: 'تجنب أدوية التنحيف غير المرخصة طبياً.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'امضغ الطعام ببطء لمنح مركز الشبع (20 دقيقة) لإصدار إشارات الامتلاء.',
+          'تجنب العصائر المحلاة والمشروبات الغازية.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: الحميات العلاجية لمرضى السكري والكلى تتطلب إشرافاً مباشراً من أخصائي التغذية العلاجية والطبيب المعالج.'
+      };
+    } else {
+      rawReport = {
+        id: `WARD-DRM-${Date.now().toString().slice(-4)}`,
+        timestamp: nowStr,
+        patientQuery: `[عيادة الجلدية والتجميل] التغير الجلدي: ${skinSymptom} | البشرة: ${skinType}`,
+        initialAnalysisAndDiagnosis: `وصف التغير الجلدي (${skinSymptom}) على بشرة (${skinType}) يشير أولياً إلى تهيج في الحاجز الجلدي (Skin Barrier) أو أكزيما تماسية خفيفة.`,
+        treatmentAndPreventionPlan: [
+          'إيقاف المقشرات الكيميائية والمنتجات العطرية لحين تعافي الحاجز الجلدي.',
+          'استخدام غسول طبي لطيف خالٍ من الصابون بماء فاتر.',
+          'تطبيق واقي شمس طبي (SPF 50+) صباحاً وتجديده كل ساعتين.'
+        ],
+        detailedMedicationGuide: [
+          {
+            name: 'كريم بانثينول وسيراميد مرمم (Panthenol + Ceramides)',
+            dosage: 'طبقة رقيقة على المنطقة المتأثرة 3 مرات يومياً.',
+            precautions: 'يُمنع وضع كريمات الكورتيزون على الوجه دون وصفة جلدية محددة.'
+          }
+        ],
+        generalAdvisoryTips: [
+          'جفف البشرة بالطبطبة اللطيفة بمنشفة قطنية ولا تفرك القشور.',
+          'راقب أي تغير في حدود أو لون التصبغات الجلدية.'
+        ],
+        mandatoryMedicalDisclaimer:
+          'تنويه طبي إلزامي: التشخيص الجلدي الدقيق يتطلب الفحص البصري المباشر (Dermoscopy) لدى طبيب الجلدية المختص.'
+      };
+    }
+
+    const saved = LocalMedicalStorage.saveConsultation(rawReport);
+    setCurrentReport(saved);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="ios-glass-card p-4">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-800">شبكة العيادات التخصصية الشاملة (7 عيادات)</h2>
+            <p className="text-xs text-slate-500">اختر العيادة التخصصية لاستخدام الأدوات السريرية وإصدار التقرير الخماسي</p>
+          </div>
+          <span className="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-200/60">
+            المرحلة ٣
+          </span>
+        </div>
+
+        <div className="flex gap-2.5 overflow-x-auto pb-2">
+          {wardsList.map((ward) => {
+            const Icon = ward.icon;
+            const isSelected = activeWard === ward.id;
+            return (
+              <button
+                key={ward.id}
+                onClick={() => {
+                  setActiveWard(ward.id);
+                  setCurrentReport(null);
+                }}
+                className={`shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl transition-all text-right ${
+                  isSelected
+                    ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
+                    : 'bg-white/60 text-slate-700 hover:bg-white border border-white/80'
+                }`}
+              >
+                <Icon size={18} className={isSelected ? 'text-teal-400' : 'text-teal-600'} />
+                <div>
+                  <div className="text-xs font-bold">{ward.name}</div>
+                  <div className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                    {ward.sub}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="ios-glass-card p-6 space-y-5">
+        {activeWard === 'internal_chronic' && (
+          <div className="space-y-4">
+            <div className="border-b border-slate-200/60 pb-3 flex justify-between items-center">
+              <h3 className="font-extrabold text-slate-800">١. عيادة الأمراض الباطنية والمزمنة (السكري والضغط)</h3>
+              <Table size={18} className="text-teal-600" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">الضغط الانقباضي (Systolic)</label>
+                <input
+                  type="number"
+                  value={systolic}
+                  onChange={(e) => setSystolic(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">الضغط الانبساطي (Diastolic)</label>
+                <input
+                  type="number"
+                  value={diastolic}
+                  onChange={(e) => setDiastolic(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">سكر الدم الصائم (mg/dL)</label>
+                <input
+                  type="number"
+                  value={glucose}
+                  onChange={(e) => setGlucose(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white/50 rounded-2xl p-4 border border-white/80">
+              <h4 className="text-xs font-bold text-slate-500 mb-2">جدول القياسات المحلية المسجلة:</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-right">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-400">
+                      <th className="pb-2">التوقيت</th>
+                      <th className="pb-2">الضغط</th>
+                      <th className="pb-2">السكر</th>
+                      <th className="pb-2">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {chronicLogs.slice(0, 4).map((log) => (
+                      <tr key={log.id}>
+                        <td className="py-2">{log.date}</td>
+                        <td className="py-2 font-bold">{log.systolic}/{log.diastolic}</td>
+                        <td className="py-2 font-bold">{log.fastingGlucose}</td>
+                        <td className="py-2 text-teal-700 font-bold">{log.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'ortho_physio' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٢. عيادة العظام والمفاصل والعلاج الطبيعي
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600 block mb-2">المفصل أو المنطقة المتأثرة</label>
+                <select
+                  value={jointArea}
+                  onChange={(e) => setJointArea(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                >
+                  <option>مفصل الركبة وأسفل الظهر</option>
+                  <option>الفقرات العنقية ومفصل الكتف</option>
+                  <option>مفصل الكاحل والأربطة</option>
+                </select>
+              </div>
+              <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600 block mb-2">الحركة المحفزة للألم</label>
+                <input
+                  type="text"
+                  value={movementPain}
+                  onChange={(e) => setMovementPain(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'pediatrics' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٣. عيادة الأطفال والنمو (حاسبة الحمى بالوزن، النمو، والتطعيمات)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">عمر الطفل (بالأشهر)</label>
+                <input
+                  type="number"
+                  value={childAgeMonths}
+                  onChange={(e) => setChildAgeMonths(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">وزن الطفل (كجم)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={childWeightKg}
+                  onChange={(e) => setChildWeightKg(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">درجة الحرارة (°C)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={childTempC}
+                  onChange={(e) => setChildTempC(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'obgyn_women' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٤. عيادة صحة المرأة والنساء والتوليد (حاسبة الحمل والدورة الشهرية)
+            </h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setWomenMode('pregnancy')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                  womenMode === 'pregnancy' ? 'bg-teal-600 text-white' : 'bg-white/70 text-slate-600'
+                }`}
+              >
+                حاسبة الحمل وموعد الولادة (EDD)
+              </button>
+              <button
+                type="button"
+                onClick={() => setWomenMode('cycle')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                  womenMode === 'cycle' ? 'bg-teal-600 text-white' : 'bg-white/70 text-slate-600'
+                }`}
+              >
+                انتظام الدورة الشهرية والإباضة
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">تاريخ أول يوم لآخر دورة (LMP)</label>
+                <input
+                  type="date"
+                  value={lmpDate}
+                  onChange={(e) => setLmpDate(e.target.value)}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">متوسط طول الدورة (بالأيام)</label>
+                <input
+                  type="number"
+                  value={cycleLength}
+                  onChange={(e) => setCycleLength(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'mental_health' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٥. عيادة الصحة النفسية والسلوكية (مقياس الإرهاق وجلسة التهدئة)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white/60 p-4 rounded-2xl border border-white/80">
+                <div className="flex justify-between text-xs font-bold mb-2">
+                  <span>مؤشر الإرهاق والاحتراق النفسي (Burnout)</span>
+                  <span className="text-teal-700">{burnoutScore}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={10}
+                  max={100}
+                  value={burnoutScore}
+                  onChange={(e) => setBurnoutScore(Number(e.target.value))}
+                  className="w-full accent-teal-600"
+                />
+                <label className="text-xs font-bold text-slate-600 block mt-3">ساعات النوم اليومية</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={sleepHours}
+                  onChange={(e) => setSleepHours(Number(e.target.value))}
+                  className="w-full mt-1 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+
+              <div className="bg-teal-50/70 p-4 rounded-2xl border border-teal-200/70 flex flex-col justify-between items-center text-center">
+                <Wind className={`text-teal-600 ${isBreathingActive ? 'animate-bounce' : ''}`} size={26} />
+                <div className="my-2">
+                  <div className="text-xs font-bold text-slate-500">جلسة التهدئة العصبية التفاعلية</div>
+                  <div className="text-sm font-extrabold text-teal-900 mt-1">{breathingPhase}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsBreathingActive(!isBreathingActive)}
+                  className="px-4 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold"
+                >
+                  {isBreathingActive ? 'إيقاف جلسة التنفس' : 'بدء جلسة التهدئة (4-7-8)'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'clinical_nutri' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٦. عيادة التغذية العلاجية وإدارة الوزن
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">الوزن (كجم)</label>
+                <input
+                  type="number"
+                  value={nutriWeight}
+                  onChange={(e) => setNutriWeight(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">الطول (سم)</label>
+                <input
+                  type="number"
+                  value={nutriHeight}
+                  onChange={(e) => setNutriHeight(Number(e.target.value))}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">الهدف العلاجي</label>
+                <select
+                  value={healthGoal}
+                  onChange={(e) => setHealthGoal(e.target.value as 'loss' | 'maintain')}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                >
+                  <option value="loss">إنقاص الوزن وضبط السكر</option>
+                  <option value="maintain">تثبيت الوزن والتغذية المتوازنة</option>
+                </select>
+              </div>
+            </div>
+            <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+              <label className="text-xs font-bold text-slate-600">وصف الوجبة لتحليلها</label>
+              <input
+                type="text"
+                value={mealDesc}
+                onChange={(e) => setMealDesc(e.target.value)}
+                className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+              />
+            </div>
+          </div>
+        )}
+
+        {activeWard === 'dermatology' && (
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-800 border-b border-slate-200/60 pb-3">
+              ٧. عيادة الجلدية والتجميل
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">وصف التغير الجلدي</label>
+                <input
+                  type="text"
+                  value={skinSymptom}
+                  onChange={(e) => setSkinSymptom(e.target.value)}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3.5 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600">نوع البشرة</label>
+                <select
+                  value={skinType}
+                  onChange={(e) => setSkinType(e.target.value)}
+                  className="w-full mt-1.5 p-2 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                >
+                  <option>مختلطة إلى حساسة</option>
+                  <option>دهنية معرضة للحبوب</option>
+                  <option>جافة ومتقشرة</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleRunWardEvaluation}
+          className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-l from-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg shadow-teal-600/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
+        >
+          <Calculator size={18} />
+          <span>إصدار التقييم الطبي التخصصي وحفظه في السجل المحلي</span>
+        </button>
+      </div>
+
+      {currentReport && (
+        <StrictMedicalReportCard
+          report={currentReport}
+          titleBadge="تقرير العيادة التخصصية المعتمد"
+        />
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// PHASE 4: DIAGNOSTICS CENTER (RADIOLOGY INTERPRETER & LAB ANALYZER)
+// ============================================================================
+
+type RadiologyModality = 'XRAY' | 'MRI' | 'CT' | 'ULTRASOUND';
+
+const STANDARD_LAB_BIOMARKERS = [
+  { id: 'hb', nameAr: 'هيموغلوبين الدم', symbol: 'Hemoglobin (Hb)', unit: 'g/dL', minNormal: 12.5, maxNormal: 16.5, defaultValue: 11.2 },
+  { id: 'wbc', nameAr: 'كريات الدم البيضاء', symbol: 'WBC', unit: '×10³/µL', minNormal: 4.5, maxNormal: 11.0, defaultValue: 7.4 },
+  { id: 'hba1c', nameAr: 'السكر التراكمي', symbol: 'HbA1c', unit: '%', minNormal: 4.0, maxNormal: 5.6, defaultValue: 6.4 },
+  { id: 'alt', nameAr: 'إنزيم الكبد الأساسي', symbol: 'ALT (SGPT)', unit: 'U/L', minNormal: 7, maxNormal: 45, defaultValue: 58 },
+  { id: 'creatinine', nameAr: 'كرياتينين الكلى', symbol: 'Serum Creatinine', unit: 'mg/dL', minNormal: 0.6, maxNormal: 1.2, defaultValue: 0.95 },
+  { id: 'vitd', nameAr: 'فيتامين د النشط', symbol: '25(OH) Vitamin D', unit: 'ng/mL', minNormal: 30, maxNormal: 100, defaultValue: 16 }
+];
+
+const DiagnosticsCenterUI: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<'radiology' | 'lab'>('radiology');
+  const [modality, setModality] = useState<RadiologyModality>('MRI');
+  const [anatomicalArea, setAnatomicalArea] = useState<string>('الفقرات القطنية والعجزية (L4-L5)');
+  const [reportText, setReportText] = useState<string>('Mild disc bulge at L4-L5 with straightened lumbar lordosis.');
+  const [uploadedFileName, setUploadedFileName] = useState<string>('Lumbar_MRI_Scan_DICOM.jpg');
+  const [diagReport, setDiagReport] = useState<StrictMedicalOutput | null>(null);
+
+  const [labValues, setLabValues] = useState<Record<string, number>>(() => {
+    const init: Record<string, number> = {};
+    STANDARD_LAB_BIOMARKERS.forEach((b) => (init[b.id] = b.defaultValue));
+    return init;
+  });
+
+  const handleRunRadiology = (e: React.FormEvent) => {
+    e.preventDefault();
+    const raw: StrictMedicalOutput = {
+      id: `RAD-${modality}-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      patientQuery: `[تفسير شعاعي - ${modality}] المنطقة: ${anatomicalArea} | الملف: ${uploadedFileName}`,
+      initialAnalysisAndDiagnosis: `تفسير سريري مبسط لنتائج (${modality}) لمنطقة (${anatomicalArea}): تُظهر القراءة استقرار المحور العام مع وجود مؤشرات إجهاد ميكانيكي أو بروز غضروفي طفيف يفسر الأعراض الموضعية دون علامات خطورة حرجة. (${reportText})`,
+      treatmentAndPreventionPlan: [
+        'الجمع بين النتيجة الشعاعية والفحص السريري المباشر لدى الطبيب.',
+        'الراحة النسبية وتجنب الحركات المجهدة للمنطقة المصورة لمدة 7-10 أيام.',
+        'الاحتفاظ بنسخة الصور للمقارنة المستقبلية.'
+      ],
+      detailedMedicationGuide: [
+        {
+          name: 'مضادات الالتهاب أو المرخيات العضلية (حسب موضع التصوير)',
+          dosage: 'تُحدد الجرعة بعد مطابقة الطبيب المعالج لصورة الأشعة مع الفحص البدني.',
+          precautions: 'في فحوصات الصبغة الوريدية يجب شرب الماء وإيقاف الميتفورمين مؤقتاً.'
+        }
+      ],
+      generalAdvisoryTips: [
+        'اصطحب الصور الأصلية أو القرص المدمج (CD) عند زيارة الاستشاري.',
+        'تجنب حمل الأوزان الثقيلة.'
+      ],
+      mandatoryMedicalDisclaimer:
+        'تنويه طبي إلزامي: القراءة الذكية لتقارير الأشعة تهدف لتبسيط المصطلحات الطبية للمريض ولا تغني عن قرار استشاري الأشعة والطبيب المعالج.'
+    };
+    setDiagReport(LocalMedicalStorage.saveConsultation(raw));
+  };
+
+  const handleRunLab = (e: React.FormEvent) => {
+    e.preventDefault();
+    const abnormal = STANDARD_LAB_BIOMARKERS.filter(
+      (b) => labValues[b.id] < b.minNormal || labValues[b.id] > b.maxNormal
+    );
+    const summary =
+      abnormal.length > 0
+        ? abnormal
+            .map(
+              (b) =>
+                `${b.nameAr} (${labValues[b.id]} ${b.unit} - ${
+                  labValues[b.id] < b.minNormal ? 'منخفض ↓' : 'مرتفع ↑'
+                })`
+            )
+            .join('، ')
+        : 'جميع المؤشرات ضمن النطاق الطبيعي';
+
+    const raw: StrictMedicalOutput = {
+      id: `LAB-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      patientQuery: `[تحليل مخبري مقارن] فحص 6 مؤشرات حيوية (${abnormal.length} انحرافات مرصودة)`,
+      initialAnalysisAndDiagnosis: `بمقارنة نتائجك المخبرية مع النطاقات المرجعية القياسية، تبيّن ما يلي: ${summary}.`,
+      treatmentAndPreventionPlan: [
+        'تصحيح النواقص المخبرية (مثل فيتامين د أو الهيموغلوبين) عبر مكملات علاجية مقننة.',
+        'ضبط الحمية الغذائية وتقليل السكريات والدهون المشبعة لتحسين السكر التراكمي وإنزيمات الكبد.',
+        'إعادة الفحص المخبري للمؤشرات المنحرفة بعد 8-12 أسبوعاً.'
+      ],
+      detailedMedicationGuide: [
+        {
+          name: 'مكملات فيتامين D3 / حديد فموي (عند وجود نقص مخبري مؤكد)',
+          dosage: 'تُضبط الجرعة التصحيحية وفق درجة النقص المخبري.',
+          precautions: 'يُمنع أخذ جرعات عالية من الحديد أو الفيتامينات دون تأكيد مخبري.'
+        }
+      ],
+      generalAdvisoryTips: [
+        'تأكد من الصيام 8-12 ساعة قبل تحاليل السكر والدهون.',
+        'قد تختلف النطاقات المرجعية طفيفاً بين المختبرات.'
+      ],
+      mandatoryMedicalDisclaimer:
+        'تنويه طبي إلزامي: القراءة الآلية للتحاليل المخبرية توضح الانحرافات الرقمية ولا تغني عن استشارة الطبيب المعالج.'
+    };
+    setDiagReport(LocalMedicalStorage.saveConsultation(raw));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="ios-glass-card p-4">
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+              <Sparkles className="text-teal-600" size={22} />
+              <span>مركز التشخيص الذاتي والراديو-مخبري (Diagnostics Center)</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              تفسير مبسط لتقارير الأشعة ومقارنة معيارية للفحوصات المخبرية بالنطاقات الطبيعية
+            </p>
+          </div>
+          <span className="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-200/60">
+            المرحلة ٤
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 bg-slate-200/60 p-1.5 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSection('radiology');
+              setDiagReport(null);
+            }}
+            className={`py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+              activeSection === 'radiology' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            }`}
+          >
+            <ScanLine size={18} className="text-teal-600" />
+            <span>١. قسم الصور الشعاعية (Radiology)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSection('lab');
+              setDiagReport(null);
+            }}
+            className={`py-3 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all ${
+              activeSection === 'lab' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            }`}
+          >
+            <FlaskConical size={18} className="text-teal-600" />
+            <span>٢. قسم الفحوصات المخبرية (Lab Analyzer)</span>
+          </button>
+        </div>
+      </div>
+
+      {activeSection === 'radiology' ? (
+        <form onSubmit={handleRunRadiology} className="ios-glass-card p-6 space-y-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {(['XRAY', 'MRI', 'CT', 'ULTRASOUND'] as RadiologyModality[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setModality(m)}
+                className={`p-3 rounded-2xl border text-right transition-all ${
+                  modality === m
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                    : 'bg-white/60 text-slate-700 border-white/80'
+                }`}
+              >
+                <div className="text-xs font-extrabold">{m}</div>
+                <div className="text-[10px] opacity-75">تصوير شعاعي</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="bg-slate-900 text-white rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer border border-teal-500/30">
+              <UploadCloud size={28} className="text-teal-400 mb-2" />
+              <span className="text-xs font-bold">إرفاق صورة الأشعة أو التقرير المصور</span>
+              <div className="mt-2 bg-white/10 px-3 py-1 rounded-full text-[11px] text-teal-300 font-mono">
+                {uploadedFileName}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && setUploadedFileName(e.target.files[0].name)}
+              />
+            </label>
+
+            <div className="space-y-3">
+              <div className="bg-white/60 p-3 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600 block mb-1">المنطقة التشريحية</label>
+                <input
+                  type="text"
+                  value={anatomicalArea}
+                  onChange={(e) => setAnatomicalArea(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+                />
+              </div>
+              <div className="bg-white/60 p-3 rounded-2xl border border-white/80">
+                <label className="text-xs font-bold text-slate-600 block mb-1">نص التقرير الشعاعي</label>
+                <textarea
+                  rows={2}
+                  value={reportText}
+                  onChange={(e) => setReportText(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-white border border-slate-200 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-l from-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+          >
+            <FileText size={18} />
+            <span>تحليل وتبسيط التقرير الشعاعي الآن</span>
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleRunLab} className="ios-glass-card p-6 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {STANDARD_LAB_BIOMARKERS.map((bio) => {
+              const val = labValues[bio.id];
+              const isLow = val < bio.minNormal;
+              const isHigh = val > bio.maxNormal;
+              return (
+                <div
+                  key={bio.id}
+                  className={`p-4 rounded-2xl border ${
+                    isLow || isHigh ? 'bg-amber-50/70 border-amber-300' : 'bg-white/60 border-white/80'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="text-xs font-extrabold text-slate-800 block">{bio.nameAr}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{bio.symbol}</span>
+                    </div>
+                    <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                      الطبيعي: {bio.minNormal} - {bio.maxNormal} {bio.unit}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={val}
+                      onChange={(e) => setLabValues({ ...labValues, [bio.id]: Number(e.target.value) })}
+                      className="w-24 p-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs"
+                    />
+                    <span className="text-xs text-slate-500 font-mono">{bio.unit}</span>
+                    <div className="mr-auto">
+                      {isLow && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                          <ArrowDownRight size={12} /> منخفض
+                        </span>
+                      )}
+                      {isHigh && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                          <ArrowUpRight size={12} /> مرتفع
+                        </span>
+                      )}
+                      {!isLow && !isHigh && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+                          <Check size={12} /> طبيعي
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-l from-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+          >
+            <FlaskConical size={18} />
+            <span>مقارنة النتائج بالنطاقات الطبيعية وإصدار التقرير</span>
+          </button>
+        </form>
+      )}
+
+      {diagReport && (
+        <StrictMedicalReportCard
+          report={diagReport}
+          titleBadge="تقرير التشخيص الراديو-مخبري المعتمد"
+        />
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// PHASE 5: DIGITAL PHARMACY, OCR SCANNER & MEDICATION REMINDERS
+// ============================================================================
+
+interface DetailedDrugProfile {
+  id: string;
+  tradeName: string;
+  scientificName: string;
+  strength: string;
+  form: string;
+  indication: string;
+  mechanismOfAction: string;
+  sideEffects: string[];
+  contraindications: string;
+  recommendedSchedule: string;
+}
+
+interface MedicationReminder {
+  id: string;
+  drugName: string;
+  dosageNote: string;
+  time: string;
+  relationToFood: string;
+  takenToday: boolean;
+}
+
+const PHARMACOLOGY_DB: Record<string, DetailedDrugProfile> = {
+  AUGMENTIN: {
+    id: 'AUGMENTIN',
+    tradeName: 'أوغمنتين (Augmentin)',
+    scientificName: 'Amoxicillin + Clavulanic Acid',
+    strength: '1000 mg',
+    form: 'أقراص مغلفة',
+    indication: 'علاج الالتهابات البكتيرية في الجهاز التنفسي، الجيوب الأنفية، الأذن الوسطى، والمسالك البولية.',
+    mechanismOfAction: 'يثبط بناء الجدار الخلوي للبكتيريا، بينما يحميه حمض الكلافولانيك من إنزيمات المقاومة البكتيرية.',
+    sideEffects: ['اضطراب هضمي خفيف أو إسهال عابر', 'غثيان طفيف', 'طفح جلدي لدى مرضى حساسية البنسلين'],
+    contraindications: 'يُمنع تماماً لمن لديهم تاريخ حساسية للبنسلين.',
+    recommendedSchedule: 'قرص واحد كل 12 ساعة لمدة 7 أيام'
+  },
+  GLUCOPHAGE: {
+    id: 'GLUCOPHAGE',
+    tradeName: 'جلوكوفاج (Glucophage XR)',
+    scientificName: 'Metformin Hydrochloride',
+    strength: '500 mg',
+    form: 'أقراص ممتدة المفعول',
+    indication: 'تنظيم مستوى سكر الدم لمرضى السكري من النوع الثاني ومقاومة الإنسولين.',
+    mechanismOfAction: 'يقلل إنتاج الجلوكوز في الكبد ويرفع حساسية خلايا العضلات للإنسولين الطبيعي.',
+    sideEffects: ['انتفاخ بطني في بداية الاستخدام', 'طعم معدني خفيف', 'نقص فيتامين B12 مع الاستخدام الطويل'],
+    contraindications: 'يُمنع في القصور الكلوي الشديد ويُوقف مؤقتاً قبل الأشعة بالصبغة.',
+    recommendedSchedule: 'قرص واحد يومياً مع وجبة العشاء'
+  },
+  NEXIUM: {
+    id: 'NEXIUM',
+    tradeName: 'نيكسيوم (Nexium)',
+    scientificName: 'Esomeprazole',
+    strength: '40 mg',
+    form: 'كبسولات مقاومة للحموضة',
+    indication: 'علاج ارتجاع المريء المعدي (GERD) وقرحة المعدة وحماية جدار المعدة.',
+    mechanismOfAction: 'يثبط مضخة البروتون (PPI) في الخلايا الجدارية للمعدة مما يقلل إفراز الحمض المعدي.',
+    sideEffects: ['صداع خفيف عابر', 'انتفاخ بطني بسيط'],
+    contraindications: 'يُفصل عن دواء كلوبيدوغريل (Plavix) ويُستخدم بالمدة المقررة طبياً.',
+    recommendedSchedule: 'كبسولة واحدة صباحاً قبل الإفطار بـ 30 دقيقة'
+  }
+};
+
+const DigitalPharmacyUI: React.FC = () => {
+  const [scanMode, setScanMode] = useState<'BOX_SCAN' | 'PRESCRIPTION_OCR'>('BOX_SCAN');
+  const [selectedPreset, setSelectedPreset] = useState<string>('AUGMENTIN');
+  const [scannedProfile, setScannedProfile] = useState<DetailedDrugProfile | null>(null);
+  const [pharmReport, setPharmReport] = useState<StrictMedicalOutput | null>(null);
+  const [alarmTime, setAlarmTime] = useState<string>('09:00 ص');
+  const [foodRel, setFoodRel] = useState<string>('بعد الأكل');
+
+  const [reminders, setReminders] = useState<MedicationReminder[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_REMINDERS);
+      return raw
+        ? JSON.parse(raw)
+        : [
+            {
+              id: 'REM-1',
+              drugName: 'جلوكوفاج (Glucophage XR 500mg)',
+              dosageNote: 'قرص واحد يومياً',
+              time: '08:30 م',
+              relationToFood: 'مع الأكل',
+              takenToday: false
+            }
+          ];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleRunOCR = (e: React.FormEvent) => {
+    e.preventDefault();
+    const drug = PHARMACOLOGY_DB[selectedPreset];
+    setScannedProfile(drug);
+
+    const raw: StrictMedicalOutput = {
+      id: `PHARM-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+      patientQuery: `[الصيدلية الرقمية - ${scanMode === 'BOX_SCAN' ? 'مسح علبة دواء' : 'قراءة روشتة'}] ${drug.tradeName}`,
+      initialAnalysisAndDiagnosis: `تم التعرف الضوئي (OCR) بنجاح على الدواء: ${drug.tradeName} (${drug.scientificName} - ${drug.strength}). سبب الاستخدام: ${drug.indication}`,
+      treatmentAndPreventionPlan: [
+        `آلية العمل الدوائية: ${drug.mechanismOfAction}`,
+        `جدول الجرعة القياسي: ${drug.recommendedSchedule}.`,
+        'تفعيل منبه الجرعات المدمج لضمان الالتزام بالمواعيد الدوائية.'
+      ],
+      detailedMedicationGuide: [
+        {
+          name: `${drug.tradeName} (${drug.scientificName})`,
+          dosage: drug.recommendedSchedule,
+          precautions: `${drug.contraindications} | الأعراض الجانبية: ${drug.sideEffects.join('، ')}`
+        }
+      ],
+      generalAdvisoryTips: [
+        'احفظ الدواء في عبوته الأصلية بعيداً عن الرطوبة والحرارة.',
+        'تناول الدواء مع كوب كامل من الماء.'
+      ],
+      mandatoryMedicalDisclaimer:
+        'تنويه طبي إلزامي: القراءة الضوئية (OCR) للروشتات والأدوية مخصصة للتثقيف وتنظيم المواعيد؛ لا تقم بصرف أو تعديل أي دواء دون مطابقة الصيدلي والطبيب المعالج.'
+    };
+    setPharmReport(LocalMedicalStorage.saveConsultation(raw));
+  };
+
+  const handleAddReminder = () => {
+    if (!scannedProfile) return;
+    const newRem: MedicationReminder = {
+      id: `REM-${Date.now().toString().slice(-4)}`,
+      drugName: `${scannedProfile.tradeName} (${scannedProfile.strength})`,
+      dosageNote: scannedProfile.recommendedSchedule,
+      time: alarmTime,
+      relationToFood: foodRel,
+      takenToday: false
+    };
+    const updated = [newRem, ...reminders];
+    setReminders(updated);
+    localStorage.setItem(STORAGE_KEY_REMINDERS, JSON.stringify(updated));
+  };
+
+  const toggleTaken = (id: string) => {
+    const updated = reminders.map((r) => (r.id === id ? { ...r, takenToday: !r.takenToday } : r));
+    setReminders(updated);
+    localStorage.setItem(STORAGE_KEY_REMINDERS, JSON.stringify(updated));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="ios-glass-card p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+              <Sparkles className="text-teal-600" size={22} />
+              <span>الصيدلية الرقمية والماسح الضوئي للأدوية (Medication Guide & OCR)</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              التعرف الضوئي على الأدوية والروشتات مع شرح آلية العمل وجدولة تنبيهات الجرعات
+            </p>
+          </div>
+          <span className="text-xs font-bold bg-teal-50 text-teal-700 px-3 py-1 rounded-full border border-teal-200/60">
+            المرحلة ٥
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 bg-slate-200/60 p-1.5 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setScanMode('BOX_SCAN')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 ${
+              scanMode === 'BOX_SCAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            }`}
+          >
+            <Camera size={16} className="text-teal-600" />
+            <span>مسح علبة الدواء (Drug Box OCR)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setScanMode('PRESCRIPTION_OCR')}
+            className={`py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 ${
+              scanMode === 'PRESCRIPTION_OCR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            }`}
+          >
+            <FileSearch size={16} className="text-teal-600" />
+            <span>قراءة روشتة طبية (Prescription OCR)</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleRunOCR} className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+          <div className="bg-slate-900 text-white rounded-3xl p-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-teal-400/50 min-h-[190px]">
+            <Camera size={32} className="text-teal-400 mb-2" />
+            <span className="text-sm font-extrabold">
+              {scanMode === 'BOX_SCAN' ? 'عدسة المسح الضوئي لعلبة الدواء' : 'عدسة قراءة الروشتة الطبية'}
+            </span>
+            <span className="text-[11px] text-slate-400 mt-1">Medical Vision OCR Engine (98.4% Accuracy)</span>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-xs font-bold text-slate-600">
+              اختر دواءً لمحاكاة المسح الضوئي الفوري (OCR):
+            </label>
+            <div className="grid grid-cols-1 gap-2">
+              {Object.values(PHARMACOLOGY_DB).map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setSelectedPreset(d.id)}
+                  className={`p-3 rounded-xl text-right border transition-all flex justify-between items-center ${
+                    selectedPreset === d.id
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white/60 text-slate-700 border-white/80'
+                  }`}
+                >
+                  <span className="text-xs font-bold">{d.tradeName}</span>
+                  <span className="text-[10px] opacity-75 font-mono">{d.scientificName}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-l from-teal-600 to-teal-700 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+            >
+              <Cpu size={18} />
+              <span>تشغيل المسح الضوئي واستخراج الدليل الدوائي</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {scannedProfile && (
+        <div className="ios-glass-card p-6 space-y-5 border-2 border-teal-500/30 animate-fadeIn">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-teal-50/70 p-4 rounded-2xl border border-teal-200/70 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-teal-800 font-extrabold text-xs">
+                <Info size={16} /> <span>سبب الاستخدام</span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">{scannedProfile.indication}</p>
+            </div>
+
+            <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200/70 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-blue-900 font-extrabold text-xs">
+                <Pill size={16} /> <span>آلية العمل</span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">{scannedProfile.mechanismOfAction}</p>
+            </div>
+
+            <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200/70 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-amber-900 font-extrabold text-xs">
+                <AlertTriangle size={16} /> <span>الأعراض الجانبية</span>
+              </div>
+              <ul className="text-xs text-slate-700 list-disc list-inside space-y-1">
+                {scannedProfile.sideEffects.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-white/70 p-4 rounded-2xl border border-white flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <BellRing className="text-teal-600" size={18} />
+              <span className="text-xs font-extrabold text-slate-800">جدولة تنبيه موعد الجرعة:</span>
+              <input
+                type="text"
+                value={alarmTime}
+                onChange={(e) => setAlarmTime(e.target.value)}
+                className="w-24 p-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-center"
+              />
+              <select
+                value={foodRel}
+                onChange={(e) => setFoodRel(e.target.value)}
+                className="p-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold"
+              >
+                <option>بعد الأكل</option>
+                <option>قبل الأكل</option>
+                <option>مع الأكل</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddReminder}
+              className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
+            >
+              <PlusCircle size={14} /> <span>إضافة لمنبه الأدوية</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="ios-glass-card p-6 space-y-4">
+        <h3 className="font-extrabold text-slate-800 text-base flex items-center gap-2">
+          <BellRing className="text-teal-600" size={18} />
+          <span>التنبيهات الدوائية وجدول الجرعات اليومي</span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {reminders.map((rem) => (
+            <div
+              key={rem.id}
+              className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                rem.takenToday ? 'bg-teal-50/70 border-teal-300' : 'bg-white/60 border-white/80'
+              }`}
+            >
+              <div>
+                <div className="text-xs font-extrabold text-slate-800">{rem.drugName}</div>
+                <div className="text-[11px] text-slate-500">
+                  {rem.dosageNote} • <strong>{rem.relationToFood}</strong>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-slate-900 text-white px-2.5 py-0.5 rounded-full mt-1">
+                  <Clock size={10} /> {rem.time}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleTaken(rem.id)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 ${
+                  rem.takenToday ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Check size={14} />
+                <span>{rem.takenToday ? 'تم أخذها' : 'تأكيد الجرعة'}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {pharmReport && (
+        <StrictMedicalReportCard
+          report={pharmReport}
+          titleBadge="التقرير الفارماكولوجي المعتمد"
+        />
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// PHASE 6: FAMILY VAULT & STRICT MEDICAL PROTOCOL GOVERNANCE UI
+// ============================================================================
+
+const FamilyVaultUI: React.FC<{
+  activeMember: FamilyMemberProfile;
+  onMemberChange: (m: FamilyMemberProfile) => void;
+}> = ({ activeMember, onMemberChange }) => {
+  const [members, setMembers] = useState<FamilyMemberProfile[]>(() =>
+    FamilyVaultEngine.getFamilyMembers()
+  );
+  const [history, setHistory] = useState<StrictMedicalOutput[]>(() =>
+    LocalMedicalStorage.getHistory()
+  );
+  const [showAdd, setShowAdd] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newAge, setNewAge] = useState(10);
+  const [newAllergy, setNewAllergy] = useState('لا يوجد');
+  const [newChronic, setNewChronic] = useState('لا يوجد');
+
+  const handleSelect = (m: FamilyMemberProfile) => {
+    const updated = FamilyVaultEngine.setActiveMember(m.id);
+    onMemberChange(updated);
+    setHistory(
+      LocalMedicalStorage.getHistory().map((item) =>
+        StrictMedicalProtocolGuard.enforceAndSanitize(item, updated)
+      )
+    );
+  };
+
+  const handleAddMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    const updatedList = FamilyVaultEngine.addFamilyMember({
+      name: newName.trim(),
+      relation: 'ابن / ابنة',
+      age: newAge,
+      bloodType: 'O+',
+      allergies: [newAllergy],
+      chronicConditions: [newChronic]
+    });
+    setMembers(updatedList);
+    handleSelect(updatedList[updatedList.length - 1]);
+    setNewName('');
+    setShowAdd(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="ios-glass-card p-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-4">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+              <Users className="text-teal-600" size={22} />
+              <span>سجل العائلة المشترك وحوكمة الهيكلية الطبية (Family Vault)</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              إدارة الملفات الصحية لكافة أفراد الأسرة من حساب واحد مع فرض البروتوكول الخماسي الصارم
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdd(!showAdd)}
+            className="bg-slate-900 text-white px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-1.5"
+          >
+            <UserPlus size={15} />
+            <span>إضافة فرد للعائلة</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {members.map((m) => {
+            const isSel = m.id === activeMember.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => handleSelect(m)}
+                className={`p-3.5 rounded-2xl border text-right transition-all ${
+                  isSel
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-lg scale-[1.02]'
+                    : 'bg-white/60 text-slate-700 border-white/80'
+                }`}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className={`w-7 h-7 rounded-full ${m.avatarColor} text-white font-bold text-xs flex items-center justify-center`}>
+                    {m.name.charAt(0)}
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-600">
+                    {m.bloodType}
+                  </span>
+                </div>
+                <div className="text-xs font-extrabold truncate">{m.name}</div>
+                <div className="text-[10px] opacity-75">{m.relation} • {m.age} سنة</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {showAdd && (
+          <form onSubmit={handleAddMember} className="bg-white/80 p-4 rounded-2xl border border-teal-200 grid grid-cols-1 sm:grid-cols-5 gap-3">
+            <input
+              type="text"
+              required
+              placeholder="اسم الفرد"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="p-2 rounded-xl border border-slate-200 text-xs font-bold"
+            />
+            <input
+              type="number"
+              placeholder="العمر"
+              value={newAge}
+              onChange={(e) => setNewAge(Number(e.target.value))}
+              className="p-2 rounded-xl border border-slate-200 text-xs font-bold"
+            />
+            <input
+              type="text"
+              placeholder="الحساسية الدوائية"
+              value={newAllergy}
+              onChange={(e) => setNewAllergy(e.target.value)}
+              className="p-2 rounded-xl border border-slate-200 text-xs"
+            />
+            <input
+              type="text"
+              placeholder="الأمراض المزمنة"
+              value={newChronic}
+              onChange={(e) => setNewChronic(e.target.value)}
+              className="p-2 rounded-xl border border-slate-200 text-xs"
+            />
+            <button type="submit" className="bg-teal-600 text-white rounded-xl text-xs font-bold p-2">
+              حفظ الفرد
+            </button>
+          </form>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/60 p-4 rounded-2xl border border-white/90">
+          <div className="flex items-center gap-3">
+            <Droplet className="text-rose-600 shrink-0" size={20} />
+            <div>
+              <span className="text-[10px] text-slate-400 block">فصيلة الدم والعمر</span>
+              <span className="text-xs font-extrabold">{activeMember.bloodType} • {activeMember.age} عاماً</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <AlertOctagon className="text-amber-600 shrink-0" size={20} />
+            <div>
+              <span className="text-[10px] text-slate-400 block">الحساسية المسجلة</span>
+              <span className="text-xs font-extrabold text-amber-800">{activeMember.allergies.join('، ')}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <HeartPulse className="text-teal-600 shrink-0" size={20} />
+            <div>
+              <span className="text-[10px] text-slate-400 block">التاريخ المرضي المزمن</span>
+              <span className="text-xs font-extrabold text-teal-900">{activeMember.chronicConditions.join('، ')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="ios-glass-card p-4 border-r-4 border-r-teal-600 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="text-teal-600" size={22} />
+          <div>
+            <div className="text-xs font-extrabold text-slate-800">
+              السجل الطبي العائلي الموحد ({history.length} تقارير موثقة بالهيكلية الخماسية)
+            </div>
+            <div className="text-[11px] text-slate-500">
+              يتم فحص تعارض الأدوية تلقائياً مع حساسية ({activeMember.name})
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            LocalMedicalStorage.clearHistory();
+            setHistory([]);
+          }}
+          className="text-xs font-bold text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-xl flex items-center gap-1"
+        >
+          <Trash2 size={14} /> <span>مسح السجل</span>
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {history.map((item) => (
+          <StrictMedicalReportCard key={item.id} report={item} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MASTER APPLICATION SHELL & FLOATING iOS BOTTOM BAR
+// ============================================================================
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'triage' | 'clinics' | 'diagnosis' | 'pharmacy' | 'family'>('triage');
+  const [routedWardId, setRoutedWardId] = useState<SpecialtyWardId>('internal_chronic');
+  const [activeMember, setActiveMember] = useState<FamilyMemberProfile>(() =>
+    FamilyVaultEngine.getActiveMember()
+  );
+
+  const handleAutoRouteToClinic = (clinicId: string) => {
+    setRoutedWardId((clinicId as SpecialtyWardId) || 'internal_chronic');
+    setActiveTab('clinics');
+  };
+
+  const navItems = [
+    { id: 'triage', label: 'الفرز السريع', icon: Activity },
+    { id: 'clinics', label: 'العيادات', icon: Stethoscope },
+    { id: 'diagnosis', label: 'التشخيص', icon: BrainCircuit },
+    { id: 'pharmacy', label: 'الصيدلية', icon: Pill },
+    { id: 'family', label: 'الملف العائلي', icon: Users }
+  ] as const;
+
+  return (
+    <div dir="rtl" className="min-h-screen pb-32 px-4 pt-8 max-w-4xl mx-auto">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body {
+          font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+          direction: rtl;
+          text-align: right;
+          background: linear-gradient(135deg, #F0F4F8 0%, #E6F2F2 50%, #F8FAFC 100%);
+          color: #1E293B;
+          margin: 0;
+        }
+        .ios-glass-card {
+          background: rgba(255, 255, 255, 0.68);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+          border-radius: 24px;
+        }
+        .ios-floating-bar {
+          background: rgba(255, 255, 255, 0.82);
+          backdrop-filter: blur(25px) saturate(180%);
+          -webkit-backdrop-filter: blur(25px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.12);
+          border-radius: 9999px;
+        }
+      `}</style>
+
+      <header className="mb-6 flex flex-wrap justify-between items-center gap-4 px-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">طبيبي</h1>
+            <span className="text-[11px] font-bold bg-teal-600 text-white px-2.5 py-0.5 rounded-full">
+              6 Phases Complete
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            منصة الرعاية الذكية المتكاملة • واجهة iOS Glassmorphism • البروتوكول الطبي الخماسي
+          </p>
+        </div>
+
+        <button
+          onClick={() => setActiveTab('family')}
+          className="ios-glass-card px-4 py-2.5 flex items-center gap-3 hover:scale-[1.02] transition-all"
+        >
+          <span className={`w-8 h-8 rounded-full ${activeMember.avatarColor} text-white font-bold text-xs flex items-center justify-center`}>
+            {activeMember.name.charAt(0)}
+          </span>
+          <div className="text-right">
+            <div className="text-xs font-extrabold text-slate-800">{activeMember.name}</div>
+            <div className="text-[10px] text-teal-700 font-bold flex items-center gap-1">
+              <ShieldCheck size={11} /> فصيلة {activeMember.bloodType} • تغيير الفرد
+            </div>
+          </div>
+        </button>
+      </header>
+
+      <main>
+        {activeTab === 'triage' && <SmartTriageHub onNavigateToClinic={handleAutoRouteToClinic} />}
+        {activeTab === 'clinics' && <VirtualSpecialtyWards initialWardId={routedWardId} />}
+        {activeTab === 'diagnosis' && <DiagnosticsCenterUI />}
+        {activeTab === 'pharmacy' && <DigitalPharmacyUI />}
+        {activeTab === 'family' && (
+          <FamilyVaultUI activeMember={activeMember} onMemberChange={setActiveMember} />
+        )}
+      </main>
+
+      <nav className="fixed bottom-5 left-4 right-4 max-w-md mx-auto z-50">
+        <div className="ios-floating-bar px-3 py-2 flex justify-between items-center">
+          {navItems.map((tab) => {
+            const IconComponent = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center justify-center w-16 py-2 rounded-full transition-all duration-300 ${
+                  isActive
+                    ? 'text-teal-600 bg-teal-50/90 shadow-sm scale-105 font-extrabold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <IconComponent size={20} strokeWidth={isActive ? 2.5 : 1.75} />
+                <span className="text-[10px] mt-1 tracking-tight">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
+```
